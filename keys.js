@@ -1,6 +1,5 @@
-console.log('this is loaded');
-
-exports.twitterKeys = ({
+var Twitter = require('Twitter');
+module.exports = new Twitter ({
   consumer_key: 'OsOI5qfNmtrXXPpgcx3RcG3VL',
   consumer_secret: 'g2ij0WX4I7B8zs2kENzMIvic8UqlJD4kwNpyvwmGyuEVizu4gR',
   access_token_key: '2835847626-hyNgSY8OBReDQBz1jIocVlLdAYLaWjV9DzRK9D7',
