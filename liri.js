@@ -3,11 +3,10 @@ var spotify = require('spotify');
 var request = require('request');
 var fs = require('fs');
 
-var nodeArgs = process.argv;
-var userCommand = nodeArgs[2];
-var userInput = nodeArgs.slice(3);
+var userCommand = process.argv[2];
+var userInput = process.argv.slice(3);
 
-function commandRouter(userInput) {
+function commandRouter(userCommand) {
 	switch(userCommand) {
 		case 'my-tweets':
 			twitterCall();
@@ -32,58 +31,70 @@ function commandRouter(userInput) {
 	}
 }
 
-commandRouter(userInput);
+commandRouter(userCommand);
 
+// call twitter and display the last 20 tweets with created times
 function twitterCall() {
 	var params = {screen_name: 'jennychuily'};
 	client.get('statuses/user_timeline', params, function(error, tweets, response) {
-		if (!error) {
+		if (error) {
+			console.log(error);
+		} else {
 			for (var i=0; i<20; i++) {
 				console.log(tweets[i].created_at);
 				console.log(tweets[i].text);
-				console.log("---------------");
+				console.log("------------------");
 			}
 		}
 	})
 	logFile();
 }
 
+// call spotify and display song's information
 function spotifyCall(userInput) {
 	spotify.search({
 		type: 'track',
 		query: userInput,
 	},
-		function (err, data) {
-			if (err) {
-				console.log('Error occurred: ' + err);
+		function (error, data) {
+			if (error) {
+				console.log('Error occurred: ' + error);
 				return;
+			} else {
+				console.log("Artist: " + data.tracks.items[1].artists[0].name);
+				console.log("Name: " + data.tracks.items[0].name);
+				console.log("Preview link: " + data.tracks.items[0].preview_url);
+				console.log("Album: " + data.tracks.items[1].album.name);
+				console.log("------------------");
 			}
-			console.log("Artist: " + data.tracks.items[1].artists[0].name);
-			console.log("Name: " + data.tracks.items[0].name);
-			console.log("Preview link: " + data.tracks.items[0].preview_url);
-			console.log("Album: " + data.tracks.items[1].album.name);
 		}
 	)
 	logFile();
 }
-
+// call omdb and display movie's information
 function omdbCall(userInput) {
-	console.log(userInput);
-	request('http://www.omdbapi.com/?t=' + userInput + '&y=&plot=short&r=json&tomatoes=true'), function(error, response, body) {
-		if (!error && response === 200) {
-			console.log(JSON.parse(body).Title);
-			console.log(JSON.parse(body).Year);
-		 	console.log(JSON.parse(body).imdbRating);
-		 	console.log(JSON.parse(body).Country);
-		 	console.log(JSON.parse(body).Language);
-		 	console.log(JSON.parse(body).Plot);
-		 	console.log(JSON.parse(body).Actors);
-		 	console.log(JSON.parse(body).tomatoConsensus);
-		 	console.log(JSON.parse(body).tomatoURL);
+	request('http://www.omdbapi.com/?t=' + userInput + '&y=&plot=short&tomatoes=true&r=json', function(error, response, body) {
+		if (error) {
+			console.log(error);
+		} else {
+			console.log('Title: ' + JSON.parse(body).Title);
+			console.log('Year: ' + JSON.parse(body).Year);
+		 	console.log('imdbRating: ' + JSON.parse(body).imdbRating);
+		 	console.log('Country: ' + JSON.parse(body).Country);
+		 	console.log('Language: ' + JSON.parse(body).Language);
+		 	console.log('Plot: ' + JSON.parse(body).Plot);
+		 	console.log('Actors: ' + JSON.parse(body).Actors);
+		 	console.log('tomatoConsensus: ' + JSON.parse(body).tomatoConsensus);
+		 	console.log('tomatoURL: ' + JSON.parse(body).tomatoURL);
+		 	console.log("------------------");
+			
+			logFile();
 		}
-	}
+	})
+	
 }
 
+// run the command and input in random.txt
 function doWhatItSays() {
 	fs.readFile('random.txt', 'utf-8', function(error, data) {
 		var input = data.split(',');
@@ -94,13 +105,15 @@ function doWhatItSays() {
 	logFile();
 }
 
+// log each user command and input to log.txt
 function logFile() {
-	userInput = userInput.replace(',', ' ');
-	var logEntry = userCommand + ' ' + userInput + '\n';
+	userInput = userInput.join(' '); // join the array with spaces
+	var logEntry = userCommand + ' ' + userInput + '\n'; // append new command and input into log
 	fs.appendFile('log.txt', logEntry, function(err) {
 		if (err) {
-			console.log(err)
+			console.log(err);
+		} else {
+			console.log('log was updated');
 		}
-		console.log('log was updated')
 	})
 }
